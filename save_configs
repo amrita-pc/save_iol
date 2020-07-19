@@ -1,0 +1,85 @@
+#!/bin/bash
+
+### Script was written in 2018.
+
+### Remove error printing to STDOUT ####
+#function setup
+#{
+#       function execute () {
+#               nohup execute "$@" > /dev/null 2>&1 & disown
+#       }
+#}
+
+function usage
+{
+        echo "usage: ./execute \"command/s to run\"
+                -c|--configure \"string\"
+                -s|--save
+                -e|--enable
+
+}
+
+function configure
+{
+
+ports=`netstat -natup | awk '{print $4}' | cut -f2 -d: | sort | uniq | grep ^30`
+portArray=( $ports )
+
+for i in "${portArray[@]}"
+do
+
+echo "$CMD_LINE_ARGS"
+
+        ( sleep 1; echo en; echo end; echo $password; echo en; echo $password; echo "conf t"; echo "$CMD_LINE_ARGS"; echo "end"; echo "quit" ) | telnet 127.0.0.1 $i
+done
+}
+
+function save
+{
+
+ports=`netstat -natup | awk '{print $4}' | cut -f2 -d: | sort | uniq | grep ^30`
+portArray=( $ports )
+
+for i in "${portArray[@]}"
+do
+        ( sleep 1; echo en; echo end; echo $password; echo en; echo $password; echo "wr"; sleep 1; echo "quit" ) | telnet 127.0.0.1 $i
+done
+}
+
+function en
+{
+
+### run commands at enable level
+
+ports=`netstat -natup | awk '{print $4}' | cut -f2 -d: | sort | uniq | grep ^30`
+portArray=( $ports )
+
+for i in "${portArray[@]}"
+do
+
+echo "$CMD_LINE_ARGS"
+
+        ( sleep 1; echo en; echo end; echo $password; echo en; echo $password; echo "$CMD_LINE_ARGS"; echo "end"; echo "quit" ) | telnet 127.0.0.1 $i
+done
+}
+
+password="cisco"
+key="$1"
+#setup
+
+case $key in
+        -c|--configure)
+                CMD_LINE_ARGS="$2"
+                configure
+                ;;
+        -s|--save)
+                save
+                ;;
+        -e|--enable)
+                CMD_LINE_ARGS="$2"
+                en
+                ;;
+        *)
+                usage
+                ;;
+        esac
